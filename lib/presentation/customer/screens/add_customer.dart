@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:swipe_app/utils/swipe_services.dart';
 
 class AddCustomerScreen extends StatelessWidget {
   const AddCustomerScreen({super.key});
@@ -11,6 +12,7 @@ class AddCustomerScreen extends StatelessWidget {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController emailController = TextEditingController();
     final TextEditingController phoneController = TextEditingController();
+    bool response;
 
     return Scaffold(
       appBar: AppBar(
@@ -23,7 +25,7 @@ class AddCustomerScreen extends StatelessWidget {
             TextField(
               controller: customerIdController,
               decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                 border: OutlineInputBorder(
                   borderSide: const BorderSide(color: Color(0xFF262826)),
                   borderRadius: BorderRadius.circular(10),
@@ -43,7 +45,7 @@ class AddCustomerScreen extends StatelessWidget {
             TextField(
               controller: nameController,
               decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                 border: OutlineInputBorder(
                   borderSide: const BorderSide(color: Color(0xFF262826)),
                   borderRadius: BorderRadius.circular(10),
@@ -63,7 +65,7 @@ class AddCustomerScreen extends StatelessWidget {
             TextField(
               controller: emailController,
               decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                 border: OutlineInputBorder(
                   borderSide: const BorderSide(color: Color(0xFF262826)),
                   borderRadius: BorderRadius.circular(10),
@@ -83,7 +85,7 @@ class AddCustomerScreen extends StatelessWidget {
             TextField(
               controller: phoneController,
               decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                 border: OutlineInputBorder(
                   borderSide: const BorderSide(color: Color(0xFF262826)),
                   borderRadius: BorderRadius.circular(10),
@@ -100,14 +102,18 @@ class AddCustomerScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20,),
-            ElevatedButton(onPressed: (){
+            ElevatedButton(onPressed: () async {
               log(customerIdController.text, name: "Customer ID >>");
               log(nameController.text, name: "Name >>");
               log(phoneController.text, name: "Phone >>");
               log(emailController.text, name: "Email >>");
-
-
-            }, child: const Row(
+              response = await SwipeServices().addCustomer(customerId: customerIdController.text.toString(), customerEmail: emailController.text.toString(), customerName: nameController.text.toString(), customerPhone: phoneController.text.toString());
+              print(response.toString());
+              if(response)
+                const AlertDialog(
+                title: Text("Customer Created successfully!" ),
+              );
+              }, child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text("Add Customer"),

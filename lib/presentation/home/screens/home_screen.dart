@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:swipe_app/presentation/customer/screens/add_customer.dart';
+import 'package:swipe_app/presentation/customer/screens/get_customers_screen.dart';
+import 'package:swipe_app/presentation/invoice/screens/create_invoice.dart';
+import 'package:swipe_app/presentation/invoice/screens/view_invoices.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -13,20 +16,54 @@ class HomeScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ElevatedButton(onPressed: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const AddCustomerScreen()));
-              }, child: const Text("Add Customer")),
-              ElevatedButton(onPressed: (){}, child: const Text("Add Product")),
-              ElevatedButton(onPressed: (){}, child: const Text("Create Invoice")),
-              ElevatedButton(onPressed: (){}, child: const Text("View Invoices"))
-            ],
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ElevatedButton(onPressed: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const AddCustomerScreen()));
+            },child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.person_add_alt_1_rounded),
+                SizedBox(width: 10,),
+                Text("Add Customer"),
+              ],
+            )),
+            const SizedBox(height: 20,),
+            ElevatedButton(onPressed: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const CustomerListScreen()));
+            }, child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.list_alt_rounded),
+                SizedBox(width: 10,),
+                Text("Get Customers List"),
+              ],
+            )),
+            const SizedBox(height: 20,),
+            ElevatedButton(onPressed: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context) => CreateInvoice()));
+            }, child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.add_comment_rounded),
+                SizedBox(width: 10,),
+                Text("Create Invoice"),
+              ],
+            )),
+            const SizedBox(height: 20,),
+            ElevatedButton(onPressed: (){
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ViewInvoicesScreen()));
+            }, child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.receipt_long_rounded),
+                SizedBox(width: 10,),
+                Text("View Invoices"),
+              ],
+            ))
+          ],
         ),
       ),
     );
