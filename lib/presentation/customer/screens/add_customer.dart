@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:swipe_app/presentation/customer/screens/get_customers_screen.dart';
 import 'package:swipe_app/utils/swipe_services.dart';
 
 class AddCustomerScreen extends StatelessWidget {
@@ -12,7 +15,6 @@ class AddCustomerScreen extends StatelessWidget {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController emailController = TextEditingController();
     final TextEditingController phoneController = TextEditingController();
-    bool response;
 
     return Scaffold(
       appBar: AppBar(
@@ -84,6 +86,7 @@ class AddCustomerScreen extends StatelessWidget {
             const SizedBox(height: 20,),
             TextField(
               controller: phoneController,
+              maxLength: 10,
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                 border: OutlineInputBorder(
@@ -102,25 +105,33 @@ class AddCustomerScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20,),
-            ElevatedButton(onPressed: () async {
-              log(customerIdController.text, name: "Customer ID >>");
-              log(nameController.text, name: "Name >>");
-              log(phoneController.text, name: "Phone >>");
-              log(emailController.text, name: "Email >>");
-              response = await SwipeServices().addCustomer(customerId: customerIdController.text.toString(), customerEmail: emailController.text.toString(), customerName: nameController.text.toString(), customerPhone: phoneController.text.toString());
-              print(response.toString());
-              if(response)
-                const AlertDialog(
-                title: Text("Customer Created successfully!" ),
-              );
-              }, child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Add Customer"),
-              ],
-            ))
           ],
         ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(20),
+        child: ElevatedButton(onPressed: () async {
+          log(customerIdController.text, name: "Customer ID >>");
+          log(nameController.text, name: "Name >>");
+          log(phoneController.text, name: "Phone >>");
+          log(emailController.text, name: "Email >>");
+          var response = await SwipeServices().addCustomer(customerId: customerIdController.text.toString(), customerEmail: emailController.text.toString(), customerName: nameController.text.toString(), customerPhone: phoneController.text.toString());
+          if(response.statusCode == 200 || response.statusCode == 201){
+            Fluttertoast.showToast(msg: "Customer created Sucessfully");
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const CustomerListScreen()));
+          }else{
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(jsonDecode(response.body)['error_code'])));
+          }
+          },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.all(12), // Adjust the value as needed
+            ),
+            child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("Add Customer", style: TextStyle(fontSize: 22),),
+          ],
+        )),
       ),
     );
   }

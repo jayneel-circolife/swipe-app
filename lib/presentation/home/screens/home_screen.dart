@@ -20,6 +20,8 @@ class HomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            Image.asset("assets/logo/circolife_registered_logo.png"),
+            const SizedBox(height: 60,),
             ElevatedButton(onPressed: (){
               Navigator.push(context, MaterialPageRoute(builder: (context) => const AddCustomerScreen()));
             },child: const Row(

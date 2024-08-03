@@ -14,7 +14,7 @@ class SwipeServices {
     'Content-type' : 'application/json'
   };
 
-  Future<bool> addCustomer(
+  Future<http.Response> addCustomer(
       {required String customerId,
       required String customerName,
       required String customerEmail,
@@ -30,13 +30,14 @@ class SwipeServices {
     var response = await http.post(url,
     body: jsonEncode(customer),
     headers: headers);
-    log(response.statusCode.toString(), name: "STATUS CODE >>");
-    log(response.body.toString(), name: "REASON >>");
-    if(response.statusCode == 201 || response.statusCode == 200){
-      return true;
-    }else{
-      return false;
-    }
+    return response;
+    // log(response.statusCode.toString(), name: "STATUS CODE >>");
+    // log(response.body.toString(), name: "REASON >>");
+    // if(response.statusCode == 201 || response.statusCode == 200){
+    //   return true;
+    // }else{
+    //   return false;
+    // }
   }
 
   Future<http.Response> getCustomers() async {
