@@ -117,7 +117,7 @@ class AddCustomerScreen extends StatelessWidget {
           log(emailController.text, name: "Email >>");
           var response = await SwipeServices().addCustomer(customerId: customerIdController.text.toString(), customerEmail: emailController.text.toString(), customerName: nameController.text.toString(), customerPhone: phoneController.text.toString());
           if(response.statusCode == 200 || response.statusCode == 201){
-            Fluttertoast.showToast(msg: "Customer created Sucessfully");
+            Fluttertoast.showToast(msg: "Customer created Successfully");
           Navigator.push(context, MaterialPageRoute(builder: (context) => const CustomerListScreen()));
           }else{
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(jsonDecode(response.body)['error_code'])));

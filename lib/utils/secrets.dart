@@ -1,4 +1,5 @@
 class AppSecrets {
-  static String token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMjI2NzYzLCJuYW1lIjoiQVBJIFVzZXIiLCJjb21wYW55X2lkIjoxMTMwODc2LCJjb21wYW55X25hbWUiOiJBUEkgVGVzdCAzMjY0IiwiaWF0IjoxNzE4MjU5NDIwLCJ2ZXJzaW9uIjoyfQ.Fpo9fwS_I4n6mXjftxaRYB0mP72Ggeehs6HhWJIv9PE";
+  static String token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMzE5ODU2LCJuYW1lIjoiQVBJIFVzZXIiLCJjb21wYW55X2lkIjoxMDM1MDcxLCJjb21wYW55X25hbWUiOiJQUk9DWU9OIFNUQVIgUFJJVkFURSBMSU1JVEVEIiwiaWF0IjoxNzIzNTc0MTYwLCJ2ZXJzaW9uIjoyLCJwYXJ0bmVyIjp0cnVlfQ.VUP0bbj0Pcb-IBOU1t8Fr87SrxochiisBqN_FvXMZOw";
   static String baseUrl = "app.getswipe.in";
+  static String url = "production.circolife.vip";
 }

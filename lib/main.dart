@@ -12,7 +12,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(useMaterial3: true),
+      theme: ThemeData.light(useMaterial3: true).copyWith(scaffoldBackgroundColor: const Color(0xFFFCFCFD),textTheme: ThemeData.light().textTheme.apply(
+        fontFamily: 'Inter',
+      ),),
       home: const HomeScreen(),
     );
   }

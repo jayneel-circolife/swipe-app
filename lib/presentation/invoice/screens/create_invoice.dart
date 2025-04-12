@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:swipe_app/utils/swipe_services.dart';
@@ -49,6 +50,15 @@ class _CreateInvoiceState extends State<CreateInvoice> {
                   const SizedBox(height: 10,),
                   TextField(
                     controller: customerIdController,
+                    onEditingComplete: () async {
+                      var response = await SwipeServices().isExistingCustomer(customerId: customerIdController.text);
+                      log(response.body, name: "RESPONSE >> ");
+                      var body = jsonDecode(response.body);
+                      log(body['customer_details']['name'], name: "NAME >>");
+                      if(body["success"]){
+                        customerNameController.text = body['customer_details']['name'];
+                      }
+                    },
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                       border: OutlineInputBorder(
@@ -99,6 +109,17 @@ class _CreateInvoiceState extends State<CreateInvoice> {
                   const SizedBox(height: 10,),
                   TextField(
                     controller: productIdController,
+                    onEditingComplete: () async {
+                      var response = await SwipeServices().isExistingProduct(productId: productIdController.text);
+                      log(response.body, name: "RESPONSE >> ");
+                      var body = jsonDecode(response.body);
+                      log(body['item'][0]['name'], name: "NAME >>");
+                      if(body["success"]){
+                        productNameController.text = body['item'][0]['name'];
+                        productUnitPriceController.text = body['item'][0]['unit_price'].toString();
+                        productWithTaxController.text = body['item'][0]['price_with_tax'].toString();
+                      }
+                    },
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                       border: OutlineInputBorder(
@@ -241,7 +262,7 @@ class _CreateInvoiceState extends State<CreateInvoice> {
             padding: const EdgeInsets.all(12), // Adjust the value as needed
           ),
           onPressed: (){
-           SwipeServices().createInvoice(customerIdController.text, customerNameController.text, productIdController.text, productNameController.text, int.parse(productQtyController.text), int.parse(productUnitPriceController.text), int.parse(productWithTaxController.text), int.parse(productNetAmountController.text));
+           SwipeServices().createInvoice(customerId: customerIdController.text, customerName:customerNameController.text, productId: productIdController.text, productName:productNameController.text, productQty:int.parse(productQtyController.text), productUnitPrice: double.parse(productUnitPriceController.text), productWithTax:double.parse(productWithTaxController.text), netAmount: totalAmount);
             },
           child: const Text("Create Invoice", style: TextStyle(fontSize: 22),),
         ),
