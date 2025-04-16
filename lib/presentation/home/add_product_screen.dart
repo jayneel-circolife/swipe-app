@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:swipe_app/utils/gsheet_helper.dart';
 import '../../models/SwipeCustomerModel.dart';
 import '../../utils/secrets.dart';
 import 'package:http/http.dart' as http;
@@ -18,6 +19,7 @@ class CreateSubscriptionScreen extends StatefulWidget {
 }
 
 class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
+  late GSheetHelper sheetLogger = GSheetHelper();
   static Map<String, String> headers = {'Authorization': AppSecrets.token, 'Content-type': 'application/json'};
   final List<String> segments = ['3+2 Year', '5 Year'];
   String selectedSegment = '3+2 Year';
@@ -53,6 +55,11 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
       startDate.month,
       startDate.day - 1,
     );
+    sheetInit();
+  }
+
+  sheetInit() async {
+    await sheetLogger.init();
   }
 
   @override
@@ -202,7 +209,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
         .where((entry) => entry.value > 0)
         .map((entry) => {'Tonnage': entry.key, 'quantity': int.parse(entry.value.toString()), 'price': int.parse(priceControllers[entry.key]?.text ?? '0')})
         .toList();
-    if(quantityMap.entries.isEmpty){
+    if (quantityMap.entries.isEmpty) {
       Fluttertoast.showToast(msg: "Please select at least one AC");
       return;
     }
@@ -265,8 +272,18 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
     if (firstResponse.statusCode == 200 || firstResponse.statusCode == 201) {
       Map<String, dynamic> resFirstData = jsonDecode(firstResponse.body.toString())["data"];
       log("${resFirstData["serial_number"]} ->  ${resFirstData["hash_id"]}", name: swipeCustomerModel.customerId.toString());
-      Fluttertoast.showToast(msg: "Subscription Created Successfully!");
-    }
+      // Fluttertoast.showToast(msg: "Subscription Created Successfully!");
+      final items = firstInvoice['items'] as List<dynamic>;
+      int sum =  items.fold(0, (sum, item) => sum + (item['total_amount'] as num).round());
+      await sheetLogger.logData(
+          customerId: swipeCustomerModel.customerId.toString(),
+          serialNumber: resFirstData["serial_number"].toString(),
+          hashId: resFirstData["hash_id"].toString(),
+          startDate: DateFormat('dd-MM-yyyy').format(subscriptionStartDate),
+          endDate: DateFormat('dd-MM-yyyy').format(subscriptionEndDate),
+          customerName: swipeCustomerModel.name.toString(),
+          amount: sum.toString());
+      Fluttertoast.showToast(msg: "Subscription Created Successfully!", webPosition: "center");}
 
     DateTime startDate = subscriptionEndDate;
     startDate = startDate.add(const Duration(days: 1));
@@ -313,10 +330,22 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
       var secondResponse = await http.post(url, body: jsonEncode(secondInvoice), headers: headers);
       // log(secondResponse.body.toString(), name: "Second Subscription >>");
       if (secondResponse.statusCode == 201 || secondResponse.statusCode == 200) {
+        Fluttertoast.showToast(msg: "Second Subscription Created Successfully!!", webPosition: "center");
         Map<String, dynamic> resData = jsonDecode(secondResponse.body.toString())["data"];
         log("${resData["serial_number"]} ->  ${resData["hash_id"]}", name: swipeCustomerModel.customerId.toString());
+        final items = secondInvoice['items'] as List<dynamic>;
+        int sum =  items.fold(0, (sum, item) => sum + (item['total_amount'] as num).round());
+        await sheetLogger.logData(
+            customerId: swipeCustomerModel.customerId.toString(),
+            serialNumber: resData["serial_number"].toString(),
+            hashId: resData["hash_id"].toString(),
+            startDate: DateFormat('dd-MM-yyyy').format(startDate),
+            endDate: DateFormat('dd-MM-yyyy').format(endDate),
+            customerName: swipeCustomerModel.name.toString(),
+            amount: sum.toString());
       }
     }
+    Navigator.of(context).pop();
   }
 
   @override
@@ -335,7 +364,10 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Select Plan", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),),
+                  const Text(
+                    "Select Plan",
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                  ),
                   const SizedBox(
                     height: 10,
                   ),
@@ -456,7 +488,6 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
                     const SizedBox(height: 12),
                   ],
                   ElevatedButton(
-
                     onPressed: handleProceed,
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFA14996), foregroundColor: Colors.white),
                     child: const Row(

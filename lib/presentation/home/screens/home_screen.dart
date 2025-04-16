@@ -20,7 +20,11 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Image.asset("assets/logo/logo.png", width: 200, height: 100,),
+              Image.asset(
+                "assets/logo/logo.png",
+                width: 200,
+                height: 100,
+              ),
               const SizedBox(
                 height: 60,
               ),
@@ -128,7 +132,7 @@ class HomeScreen extends StatelessWidget {
               //     )),
               ElevatedButton(
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=> const SelectCustomerScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const SelectCustomerScreen()));
                   },
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
