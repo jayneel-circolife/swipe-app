@@ -4,8 +4,10 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:swipe_app/presentation/home/screens/select_devices_screen.dart';
 import 'package:swipe_app/utils/gsheet_helper.dart';
 import '../../models/SwipeCustomerModel.dart';
+import 'package:lottie/lottie.dart';
 import '../../utils/secrets.dart';
 import 'package:http/http.dart' as http;
 
@@ -23,6 +25,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
   static Map<String, String> headers = {'Authorization': AppSecrets.token, 'Content-type': 'application/json'};
   final List<String> segments = ['3+2 Year', '5 Year'];
   String selectedSegment = '3+2 Year';
+  bool isLoading = false;
   DateTime startDate = DateTime.now().subtract(const Duration(days: 7));
   DateTime? endDate;
   final Map<String, List<String>> skuCategories = {
@@ -213,14 +216,23 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
       Fluttertoast.showToast(msg: "Please select at least one AC");
       return;
     }
-    log('Selected SKUs: $selectedSkus');
-    log('Selected Customer: ${widget.customer.toString()}');
-
-    createBulkSubscriptions(widget.customer, startDate, endDate!, selectedSkus, selectedSegment);
+    setState(() {
+      isLoading = true;
+    });
+    // log('Selected SKUs: $selectedSkus');
+    // log('Selected Customer: ${widget.customer.toString()}');
+    //
+    // createBulkSubscriptions(widget.customer, startDate, endDate!, selectedSkus, selectedSegment);
   }
 
   createBulkSubscriptions(SwipeCustomerModel swipeCustomerModel, DateTime subscriptionStartDate, DateTime subscriptionEndDate,
       List<Map<String, dynamic>> tonnage, String plan) async {
+    Map<String, dynamic> resFirstData = {};
+    Map<String, dynamic> resData = {};
+    int? firstAmount;
+    int? secondAmount;
+    DateTime? secondStartDate;
+    DateTime? secondEndDate;
     final url = Uri.https(AppSecrets.baseUrl, "/api/partner/v2/doc");
     log(url.toString(), name: "HITTING TO >>");
     final addressUrl = Uri.https(AppSecrets.baseUrl, "/api/partner/v2/customer/${swipeCustomerModel.customerId}");
@@ -268,13 +280,12 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
     }
     log(firstInvoice.toString(), name: "1st Invoice BoDY >");
     var firstResponse = await http.post(url, body: jsonEncode(firstInvoice), headers: headers);
-    // log(firstResponse.body.toString(), name: "First Subscription >>");
     if (firstResponse.statusCode == 200 || firstResponse.statusCode == 201) {
-      Map<String, dynamic> resFirstData = jsonDecode(firstResponse.body.toString())["data"];
+      resFirstData = jsonDecode(firstResponse.body.toString())["data"];
       log("${resFirstData["serial_number"]} ->  ${resFirstData["hash_id"]}", name: swipeCustomerModel.customerId.toString());
-      // Fluttertoast.showToast(msg: "Subscription Created Successfully!");
       final items = firstInvoice['items'] as List<dynamic>;
-      int sum =  items.fold(0, (sum, item) => sum + (item['total_amount'] as num).round());
+      int sum = items.fold(0, (sum, item) => sum + (item['total_amount'] as num).round());
+      firstAmount = sum;
       await sheetLogger.logData(
           customerId: swipeCustomerModel.customerId.toString(),
           serialNumber: resFirstData["serial_number"].toString(),
@@ -283,7 +294,8 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
           endDate: DateFormat('dd-MM-yyyy').format(subscriptionEndDate),
           customerName: swipeCustomerModel.name.toString(),
           amount: sum.toString());
-      Fluttertoast.showToast(msg: "Subscription Created Successfully!", webPosition: "center");}
+      Fluttertoast.showToast(msg: "Subscription Created Successfully!", webPosition: "center");
+    }
 
     DateTime startDate = subscriptionEndDate;
     startDate = startDate.add(const Duration(days: 1));
@@ -328,13 +340,15 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
       }
       log(secondInvoice.toString(), name: "2st Invoice BoDY >");
       var secondResponse = await http.post(url, body: jsonEncode(secondInvoice), headers: headers);
-      // log(secondResponse.body.toString(), name: "Second Subscription >>");
       if (secondResponse.statusCode == 201 || secondResponse.statusCode == 200) {
         Fluttertoast.showToast(msg: "Second Subscription Created Successfully!!", webPosition: "center");
-        Map<String, dynamic> resData = jsonDecode(secondResponse.body.toString())["data"];
+        resData = jsonDecode(secondResponse.body.toString())["data"];
         log("${resData["serial_number"]} ->  ${resData["hash_id"]}", name: swipeCustomerModel.customerId.toString());
         final items = secondInvoice['items'] as List<dynamic>;
-        int sum =  items.fold(0, (sum, item) => sum + (item['total_amount'] as num).round());
+        int sum = items.fold(0, (sum, item) => sum + (item['total_amount'] as num).round());
+        secondAmount = sum;
+        secondStartDate = startDate;
+        secondEndDate = endDate;
         await sheetLogger.logData(
             customerId: swipeCustomerModel.customerId.toString(),
             serialNumber: resData["serial_number"].toString(),
@@ -346,11 +360,27 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
       }
     }
     Navigator.of(context).pop();
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => SelectDevicesScreen(
+                  startDate: subscriptionStartDate,
+                  customerModel: swipeCustomerModel,
+                  endDate: subscriptionEndDate,
+                  year: selectedSegment,
+                  firstSubResponse: resFirstData,
+                  secondSubResponse: resData,
+                  firstAmount: firstAmount,
+                  secondAmount: secondAmount,
+                  secondStartDate: secondStartDate,
+                  secondEndDate: secondEndDate,
+                )));
   }
 
   @override
   Widget build(BuildContext context) {
     double size = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         title: Text("Select ACs for ${widget.customer.name}"),
@@ -359,146 +389,158 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
         padding: const EdgeInsets.all(10.0),
         child: SingleChildScrollView(
           child: Center(
-            child: SizedBox(
-              width: size * 0.5,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Select Plan",
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  SegmentedButton<String>(
-                    segments: segments.map((label) => ButtonSegment(value: label, label: Text(label))).toList(),
-                    selected: <String>{selectedSegment},
-                    onSelectionChanged: (newSelection) {
-                      setState(() {
-                        selectedSegment = newSelection.first;
-                        endDate = DateTime(
-                          startDate.year + (selectedSegment == '3+2 Year' ? 3 : 5),
-                          startDate.month,
-                          startDate.day - 1,
-                        );
-                      });
-                    },
-                    multiSelectionEnabled: false,
-                    showSelectedIcon: true,
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        DateFormat("dd MMM yyyy").format(startDate),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const Text(" - "),
-                      Text(
-                        DateFormat("dd MMM yyyy").format(endDate!),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(
-                        width: 20,
-                      ),
-                      IconButton(
-                          onPressed: () async {
-                            startDate = (await showDatePicker(context: context, firstDate: DateTime(2025, 1, 1), lastDate: DateTime(2055, 1, 1)))!;
-                            setState(() {
-                              endDate = DateTime(
-                                startDate.year + (selectedSegment == '3+2 Year' ? 3 : 5),
-                                startDate.month,
-                                startDate.day,
-                              );
-                            });
-                          },
-                          icon: const Icon(Icons.edit_calendar_outlined)),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  for (var category in skuCategories.entries) ...[
-                    Text(
-                      category.key,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            child: Stack(
+
+              children: [
+                SizedBox(
+                width: size * 0.5,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Select Plan",
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
                     ),
-                    const SizedBox(height: 8),
-                    for (var sku in category.value)
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(sku, style: const TextStyle(fontSize: 16)),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Text("Price: "),
-                                Expanded(
-                                  child: TextField(
-                                    controller: priceControllers[sku],
-                                    keyboardType: TextInputType.number,
-                                    maxLength: 4,
-                                    decoration: const InputDecoration(
-                                      counterText: "",
-                                      border: OutlineInputBorder(borderSide: BorderSide(color: Color(0xFF879432))),
-                                      hintText: "Enter price",
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 20,
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text("Quantity: "),
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.remove),
-                                          onPressed: () {
-                                            setState(() {
-                                              if (quantityMap[sku]! > 0) quantityMap[sku] = quantityMap[sku]! - 1;
-                                            });
-                                          },
-                                        ),
-                                        Text(quantityMap[sku].toString()),
-                                        IconButton(
-                                          icon: const Icon(Icons.add),
-                                          onPressed: () {
-                                            setState(() {
-                                              quantityMap[sku] = quantityMap[sku]! + 1;
-                                            });
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(height: 12),
-                  ],
-                  ElevatedButton(
-                    onPressed: handleProceed,
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFA14996), foregroundColor: Colors.white),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    SegmentedButton<String>(
+                      segments: segments.map((label) => ButtonSegment(value: label, label: Text(label))).toList(),
+                      selected: <String>{selectedSegment},
+                      onSelectionChanged: (newSelection) {
+                        setState(() {
+                          selectedSegment = newSelection.first;
+                          endDate = DateTime(
+                            startDate.year + (selectedSegment == '3+2 Year' ? 3 : 5),
+                            startDate.month,
+                            startDate.day - 1,
+                          );
+                        });
+                      },
+                      multiSelectionEnabled: false,
+                      showSelectedIcon: true,
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Row(
                       children: [
-                        Text("Proceed"),
+                        Text(
+                          DateFormat("dd MMM yyyy").format(startDate),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const Text(" - "),
+                        Text(
+                          DateFormat("dd MMM yyyy").format(endDate!),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(
+                          width: 20,
+                        ),
+                        IconButton(
+                            onPressed: () async {
+                              startDate = (await showDatePicker(context: context, firstDate: DateTime(2025, 1, 1), lastDate: DateTime(2055, 1, 1)))!;
+                              setState(() {
+                                endDate = DateTime(
+                                  startDate.year + (selectedSegment == '3+2 Year' ? 3 : 5),
+                                  startDate.month,
+                                  startDate.day,
+                                );
+                              });
+                            },
+                            icon: const Icon(Icons.edit_calendar_outlined)),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    for (var category in skuCategories.entries) ...[
+                      Text(
+                        category.key,
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      for (var sku in category.value)
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(sku, style: const TextStyle(fontSize: 16)),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Text("Price: "),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: priceControllers[sku],
+                                      keyboardType: TextInputType.number,
+                                      maxLength: 4,
+                                      decoration: const InputDecoration(
+                                        counterText: "",
+                                        border: OutlineInputBorder(borderSide: BorderSide(color: Color(0xFF879432))),
+                                        hintText: "Enter price",
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text("Quantity: "),
+                                      Row(
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.remove),
+                                            onPressed: () {
+                                              setState(() {
+                                                if (quantityMap[sku]! > 0) quantityMap[sku] = quantityMap[sku]! - 1;
+                                              });
+                                            },
+                                          ),
+                                          Text(quantityMap[sku].toString()),
+                                          IconButton(
+                                            icon: const Icon(Icons.add),
+                                            onPressed: () {
+                                              setState(() {
+                                                quantityMap[sku] = quantityMap[sku]! + 1;
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+                    ],
+                    ElevatedButton(
+                      onPressed: handleProceed,
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFA14996), foregroundColor: Colors.white),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Proceed"),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              if(isLoading)...[
+                Container(width: double.maxFinite, height: double.maxFinite, color: const Color(0xffF9FAFB).withOpacity(0.25), child: Center(
+                  child: Lottie.asset("assets/anims/circolife_loader.json") ,
+                ),)
+              ]
+
+
+               ]
             ),
           ),
         ),

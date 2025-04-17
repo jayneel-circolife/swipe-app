@@ -317,6 +317,22 @@ class SwipeServices {
   }
 
   static Map<String, String> headers = {'Authorization': AppSecrets.token, 'Content-type': 'application/json'};
+  static Map<String, String> apiHeaders = {'Accept': AppSecrets.token, 'Content-type': 'application/json'};
+
+  Future<Map<String, String>> _getHeaderConfig() async {
+    // String? token = await appStorage?.retrieveEncryptedData('token');
+    Map<String, String> headers = {};
+    headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    // log(token.toString(), name: "Token>>>>>>");
+    // if (token != null) {
+    //   headers.putIfAbsent("Authorization", () => token);
+    // }
+    // log(headers.toString(), name: "IS EXISTING HEADERS");
+    return headers;
+  }
   static Map<String, String> prodHeaders = {
     'Authorization':
         "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMzE5ODU2LCJuYW1lIjoiQVBJIFVzZXIiLCJjb21wYW55X2lkIjoxMDM1MDcxLCJjb21wYW55X25hbWUiOiJQUk9DWU9OIFNUQVIgUFJJVkFURSBMSU1JVEVEIiwiaWF0IjoxNzIzNTc0MTYwLCJ2ZXJzaW9uIjoyLCJwYXJ0bmVyIjp0cnVlfQ.VUP0bbj0Pcb-IBOU1t8Fr87SrxochiisBqN_FvXMZOw",
@@ -346,6 +362,16 @@ class SwipeServices {
     //   return false;
     // }
   }
+
+  Future<http.Response> getOrders(String customerID) async {
+    final url = Uri.https(AppSecrets.url, "/api/orders/getorderbycustomerid/$customerID");
+    log(url.toString(), name: "HITTING TO >>");
+    var response = await http.get(url, headers: await _getHeaderConfig());
+    log(response.statusCode.toString(), name: "STATUS CODE >>");
+    log(response.body.toString(), name: "REASON >>");
+    return response;
+  }
+
 
   Future<http.Response> getCustomers() async {
     final url = Uri.https(AppSecrets.baseUrl, "/api/partner/v2/customer/list");

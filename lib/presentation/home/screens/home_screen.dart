@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:swipe_app/models/SwipeCustomerModel.dart';
 import 'package:swipe_app/presentation/home/screens/check_orders_screen.dart';
+import 'package:swipe_app/presentation/home/screens/select_devices_screen.dart';
 import 'package:swipe_app/presentation/home/select_customer_screen.dart';
 import 'package:swipe_app/utils/swipe_services.dart';
 
@@ -20,10 +22,15 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Image.asset(
-                "assets/logo/logo.png",
-                width: 200,
-                height: 100,
+              InkWell(
+                onTap: (){
+                  // Navigator.push(context, MaterialPageRoute(builder: (context)=>  SelectDevicesScreen(customerID: "CLJAY270824270247", startDate: DateTime(2025,4,17), endDate: DateTime(2025,4,17), serialNumber: 'sub', customerModel: SwipeCustomerModel(), hashId: 'hashIDs', amount: "3243", year: '3.2', firstSubResponse: {}, secondSubResponse: {},)));
+                },
+                child: Image.asset(
+                  "assets/logo/logo.png",
+                  width: 200,
+                  height: 100,
+                ),
               ),
               const SizedBox(
                 height: 60,
