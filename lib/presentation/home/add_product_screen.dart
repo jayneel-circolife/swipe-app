@@ -208,6 +208,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
   }
 
   void handleProceed() {
+
     final selectedSkus = quantityMap.entries
         .where((entry) => entry.value > 0)
         .map((entry) => {'Tonnage': entry.key, 'quantity': int.parse(entry.value.toString()), 'price': int.parse(priceControllers[entry.key]?.text ?? '0')})
@@ -219,10 +220,9 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
     setState(() {
       isLoading = true;
     });
-    // log('Selected SKUs: $selectedSkus');
-    // log('Selected Customer: ${widget.customer.toString()}');
-    //
-    // createBulkSubscriptions(widget.customer, startDate, endDate!, selectedSkus, selectedSegment);
+    log('Selected SKUs: $selectedSkus');
+    log('Selected Customer: ${widget.customer.toString()}');
+    createBulkSubscriptions(widget.customer, startDate, endDate!, selectedSkus, selectedSegment);
   }
 
   createBulkSubscriptions(SwipeCustomerModel swipeCustomerModel, DateTime subscriptionStartDate, DateTime subscriptionEndDate,
@@ -390,7 +390,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
         child: SingleChildScrollView(
           child: Center(
             child: Stack(
-
+              alignment: Alignment.center,
               children: [
                 SizedBox(
                 width: size * 0.5,
@@ -521,8 +521,8 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
                       const SizedBox(height: 12),
                     ],
                     ElevatedButton(
-                      onPressed: handleProceed,
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFA14996), foregroundColor: Colors.white),
+                      onPressed: isLoading ? (){} : handleProceed,
+                      style: ElevatedButton.styleFrom(backgroundColor:  isLoading ? Colors.grey : const Color(0xFFA14996), foregroundColor: Colors.white),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -533,11 +533,11 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
                   ],
                 ),
               ),
-              if(isLoading)...[
-                Container(width: double.maxFinite, height: double.maxFinite, color: const Color(0xffF9FAFB).withOpacity(0.25), child: Center(
-                  child: Lottie.asset("assets/anims/circolife_loader.json") ,
-                ),)
-              ]
+              // if(isLoading)...[
+              //   Container(width: double.maxFinite, height: double.maxFinite, color: Colors.black12, child: Center(
+              //     child: Lottie.asset("assets/anims/circolife_loader.json") ,
+              //   ),)
+              // ]
 
 
                ]

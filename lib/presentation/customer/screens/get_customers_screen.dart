@@ -25,7 +25,7 @@ class CustomerListScreen extends StatelessWidget {
           if(snapshot.connectionState == ConnectionState.done) {
             if(snapshot.hasData){
               Map<String, dynamic> data = jsonDecode(snapshot.data!.body);
-              log(data.toString(), name: "Data =>");
+              // log(data.toString(), name: "Data =>");
               log(data['total_records'].toString(), name: "Count =>");
               return ListView.builder(itemBuilder: (context, index){
                 Map<String, dynamic> customer = data['customers'][index];

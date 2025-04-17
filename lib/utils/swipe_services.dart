@@ -377,8 +377,8 @@ class SwipeServices {
     final url = Uri.https(AppSecrets.baseUrl, "/api/partner/v2/customer/list");
     log(url.toString(), name: "HITTING TO >>");
     var response = await http.get(url, headers: prodHeaders);
-    log(response.statusCode.toString(), name: "STATUS CODE >>");
-    log(response.body.toString(), name: "REASON >>");
+    log(response.statusCode.toString(), name: "Customer STATUS CODE >>");
+    // log(response.body.toString(), name: "REASON >>");
     return response;
   }
 

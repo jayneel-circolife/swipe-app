@@ -32,7 +32,7 @@ class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
     final response = await SwipeServices().getCustomers();
     final data = jsonDecode(response.body)["data"];
 
-    log(data.toString(), name: "Data =>");
+    // log(data.toString(), name: "Data =>");
 
     List customersJson = data['customers'];
     allCustomers = customersJson

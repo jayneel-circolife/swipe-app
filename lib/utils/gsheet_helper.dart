@@ -14,7 +14,6 @@ class GSheetHelper {
     try{
     final credentials = await rootBundle.loadString('assets/creds.json');
     final gSheets = GSheets(credentials);
-    log(credentials.toString(), name: "CREDS>");
     final spreadsheet = await gSheets.spreadsheet(_spreadsheetId);
     _sheet = spreadsheet.worksheetByTitle(_sheetTitle)!;
     } catch(e){

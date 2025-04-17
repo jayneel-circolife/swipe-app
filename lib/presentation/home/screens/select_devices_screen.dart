@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:swipe_app/models/SwipeCustomerModel.dart';
 import 'package:http/http.dart' as http;
+import 'package:swipe_app/presentation/home/select_customer_screen.dart';
 
 import '../../../utils/secrets.dart';
 import '../../../utils/swipe_services.dart';
@@ -48,151 +49,160 @@ class _SelectDevicesScreenState extends State<SelectDevicesScreen> {
         title: Text(
             "Select Devices ${widget.firstSubResponse["hash_id"].toString()} ${widget.firstSubResponse["serial_number"].toString()} ${widget.firstAmount.toString()}"),
       ),
-      body: FutureBuilder(
-        future: SwipeServices().getOrders(widget.customerModel.customerId.toString()),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-            List<dynamic> data = jsonDecode(snapshot.data!.body)["data"];
-
-            List<Map<String, dynamic>> filteredDevices = data
-                .where((order) {
-                  final timestamp = order["installationTimestamp"];
-                  if (timestamp == null) return false;
-
-                  final installedDate = DateTime.parse(timestamp).toLocal();
-                  return widget.startDate.isAfter(installedDate);
-                })
-                .cast<Map<String, dynamic>>()
-                .toList();
-
-            if (selectedDevices.isEmpty) {
-              for (var order in filteredDevices) {
-                final deviceId = order["deviceid"].toString();
-                final price = order["monthlyPayment_amount"] ?? 0;
-                final tonnage = order["model"] ?? "S10";
-                final type = order["ac_type"] ?? "Split";
-
-                selectedDevices[deviceId] = {
-                  "deviceid": deviceId,
-                  "subscription_price": price,
-                  "ac_ton": tonnage,
-                  "ac_type": type,
-                };
-              }
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: FutureBuilder(
+          future: SwipeServices().getOrders(widget.customerModel.customerId.toString()),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
             }
 
-            return Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: filteredDevices.length,
-                    itemBuilder: (context, index) {
-                      final order = filteredDevices[index];
-                      final deviceId = order["deviceid"].toString();
-                      final price = order["monthlyPayment_amount"] ?? 0;
-                      final tonnage = order["model"] ?? "Unknown";
-                      final type = order["ac_type"] ?? "Unknown";
+            if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+              List<dynamic> data = jsonDecode(snapshot.data!.body)["data"];
 
-                      final isChecked = selectedDevices.containsKey(deviceId);
+              List<Map<String, dynamic>> filteredDevices = data
+                  .where((order) {
+                    final timestamp = order["installationTimestamp"];
+                    if (timestamp == null) return false;
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        child: ListTile(
-                          title: Text("Device ID: $deviceId"),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("Tonnage: $tonnage"),
-                              Text("Monthly Price: ₹$price"),
-                              Text("Installed: ${order["installationTimestamp"].toString().split("T")[0]}"),
-                            ],
+                    final installedDate = DateTime.parse(timestamp).toLocal();
+                    return widget.startDate.isAfter(installedDate);
+                  })
+                  .cast<Map<String, dynamic>>()
+                  .toList();
+
+              if (selectedDevices.isEmpty) {
+                for (var order in filteredDevices) {
+                  final deviceId = order["deviceid"].toString();
+                  final price = order["monthlyPayment_amount"] ?? 0;
+                  final tonnage = order["model"] ?? "S10";
+                  final type = order["ac_type"] ?? "Split";
+
+                  selectedDevices[deviceId] = {
+                    "deviceid": deviceId,
+                    "subscription_price": price,
+                    "ac_ton": tonnage,
+                    "ac_type": type,
+                  };
+                }
+              }
+
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: filteredDevices.length,
+                      itemBuilder: (context, index) {
+                        final order = filteredDevices[index];
+                        final deviceId = order["deviceid"].toString();
+                        final price = order["monthlyPayment_amount"] ?? 0;
+                        final tonnage = order["model"] ?? "Unknown";
+                        final type = order["ac_type"] ?? "Unknown";
+
+                        final isChecked = selectedDevices.containsKey(deviceId);
+
+                        return Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          child: ListTile(
+                            title: Text("Device ID: $deviceId"),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Tonnage: $tonnage"),
+                                Text("Monthly Price: ₹$price"),
+                                Text("Installed: ${order["installationTimestamp"].toString().split("T")[0]}"),
+                              ],
+                            ),
+                            trailing: Checkbox(
+                              value: isChecked,
+                              onChanged: (value) {
+                                setState(() {
+                                  if (value == true) {
+                                    selectedDevices[deviceId] = {
+                                      "deviceid": deviceId,
+                                      "subscription_price": price,
+                                      "ac_ton": tonnage,
+                                      "ac_type": type,
+                                    };
+                                  } else {
+                                    selectedDevices.remove(deviceId);
+                                  }
+                                });
+                              },
+                            ),
                           ),
-                          trailing: Checkbox(
-                            value: isChecked,
-                            onChanged: (value) {
-                              setState(() {
-                                if (value == true) {
-                                  selectedDevices[deviceId] = {
-                                    "deviceid": deviceId,
-                                    "subscription_price": price,
-                                    "ac_ton": tonnage,
-                                    "ac_type": type,
-                                  };
-                                } else {
-                                  selectedDevices.remove(deviceId);
-                                }
-                              });
-                            },
-                          ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFA14996), foregroundColor: Colors.white),
-                  onPressed: () async {
-                    final selectedList = selectedDevices.values.toList();
-                    log(jsonEncode(selectedList), name: "Selected Devices");
-                    Map<String, dynamic> dbSubscription = {
-                      "swipe_subscription_id": widget.firstSubResponse["hash_id"],
-                      "customer_id": widget.customerModel.customerId,
-                      "customer_phone": widget.customerModel.phone,
-                      "customer_email": widget.customerModel.email,
-                      "customer_name": widget.customerModel.name,
-                      "subscription_price": int.parse(widget.firstAmount.toString()),
-                      "subscription_start_date": widget.startDate.toIso8601String(),
-                      "subscription_end_date": widget.endDate.toIso8601String(),
-                      "plan_year": widget.year == "3+2 Year" ? 3.2 : 5,
-                      "devices": selectedList,
-                      "sub_serial_number": widget.firstSubResponse["serial_number"]
-                    };
-                    log(dbSubscription.toString(), name: "Selected Devices");
-
-                    final postUrl = Uri.https(AppSecrets.url, "/api/subscription/postdatausingswipe/get");
-                    final headers = {"Content-Type": "application/json"};
-                    var response = await http.post(
-                      postUrl,
-                      body: jsonEncode(dbSubscription),
-                      headers: headers,
-                    );
-
-                    Fluttertoast.showToast(msg: "POST response (${response.statusCode}): ${response.body}");
-                    if (widget.year == "3+2 Year") {
-                      Map<String, dynamic> dbSecondSubscription = {
-                        "swipe_subscription_id": widget.secondSubResponse["hash_id"],
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFA14996), foregroundColor: Colors.white),
+                    onPressed: () async {
+                      final selectedList = selectedDevices.values.toList();
+                      log(jsonEncode(selectedList), name: "Selected Devices");
+                      Map<String, dynamic> dbSubscription = {
+                        "swipe_subscription_id": widget.firstSubResponse["hash_id"],
                         "customer_id": widget.customerModel.customerId,
                         "customer_phone": widget.customerModel.phone,
                         "customer_email": widget.customerModel.email,
                         "customer_name": widget.customerModel.name,
                         "subscription_price": int.parse(widget.firstAmount.toString()),
-                        "subscription_start_date": widget.secondStartDate?.toIso8601String(),
-                        "subscription_end_date": widget.secondEndDate?.toIso8601String(),
+                        "subscription_start_date": widget.startDate.toIso8601String(),
+                        "subscription_end_date": widget.endDate.toIso8601String(),
                         "plan_year": widget.year == "3+2 Year" ? 3.2 : 5,
                         "devices": selectedList,
-                        "sub_serial_number": widget.secondSubResponse["serial_number"]
+                        "sub_serial_number": widget.firstSubResponse["serial_number"]
                       };
                       log(dbSubscription.toString(), name: "Selected Devices");
 
-                      var secondResponse = await http.post(
+                      final postUrl = Uri.https(AppSecrets.url, "/api/subscription/postdatausingswipe/get");
+                      final headers = {"Content-Type": "application/json"};
+                      var response = await http.post(
                         postUrl,
-                        body: jsonEncode(dbSecondSubscription),
+                        body: jsonEncode(dbSubscription),
                         headers: headers,
                       );
-                      Fluttertoast.showToast(msg: "POST response (${secondResponse.statusCode}): ${secondResponse.body}");
-                    }
-                  },
-                  child: const Text("Proceed"),
-                ),
-              ],
-            );
-          }
-          return const Center(child: Text("Unable to load devices"));
-        },
+
+                      Fluttertoast.showToast(msg: "POST response (${response.statusCode}): ${response.body}");
+                      if (widget.year == "3+2 Year") {
+                        Map<String, dynamic> dbSecondSubscription = {
+                          "swipe_subscription_id": widget.secondSubResponse["hash_id"],
+                          "customer_id": widget.customerModel.customerId,
+                          "customer_phone": widget.customerModel.phone,
+                          "customer_email": widget.customerModel.email,
+                          "customer_name": widget.customerModel.name,
+                          "subscription_price": int.parse(widget.firstAmount.toString()),
+                          "subscription_start_date": widget.secondStartDate?.toIso8601String(),
+                          "subscription_end_date": widget.secondEndDate?.toIso8601String(),
+                          "plan_year": widget.year == "3+2 Year" ? 3.2 : 5,
+                          "devices": selectedList,
+                          "sub_serial_number": widget.secondSubResponse["serial_number"]
+                        };
+                        log(dbSubscription.toString(), name: "Selected Devices");
+
+                        var secondResponse = await http.post(
+                          postUrl,
+                          body: jsonEncode(dbSecondSubscription),
+                          headers: headers,
+                        );
+                        Fluttertoast.showToast(msg: "POST response (${secondResponse.statusCode}): ${secondResponse.body}");
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const SelectCustomerScreen()));
+                      }
+                    },
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Proceed"),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }
+            return const Center(child: Text("Unable to load devices"));
+          },
+        ),
       ),
     );
   }
