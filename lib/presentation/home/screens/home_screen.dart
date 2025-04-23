@@ -23,7 +23,7 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               InkWell(
-                onTap: (){
+                onTap: () {
                   // Navigator.push(context, MaterialPageRoute(builder: (context)=>  SelectDevicesScreen(customerID: "CLJAY270824270247", startDate: DateTime(2025,4,17), endDate: DateTime(2025,4,17), serialNumber: 'sub', customerModel: SwipeCustomerModel(), hashId: 'hashIDs', amount: "3243", year: '3.2', firstSubResponse: {}, secondSubResponse: {},)));
                 },
                 child: Image.asset(
@@ -139,7 +139,7 @@ class HomeScreen extends StatelessWidget {
               //     )),
               ElevatedButton(
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const SelectCustomerScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const SelectCustomerScreen(origin: "subscription",)));
                   },
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -149,6 +149,18 @@ class HomeScreen extends StatelessWidget {
                       Text(" Create Subscription ->"),
                     ],
                   )),
+              // ElevatedButton(
+              //     onPressed: () {
+              //       Navigator.push(context, MaterialPageRoute(builder: (context) => const SelectCustomerScreen(origin: "invoice",)));
+              //     },
+              //     child: const Row(
+              //       mainAxisAlignment: MainAxisAlignment.center,
+              //       mainAxisSize: MainAxisSize.min,
+              //       children: [
+              //         Icon(Icons.receipt_outlined),
+              //         Text(" Create Invoice ->"),
+              //       ],
+              //     )),
 
               // ElevatedButton(
               //     onPressed: () {

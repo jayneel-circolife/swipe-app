@@ -3,13 +3,16 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:swipe_app/presentation/home/add_product_screen.dart';
+import 'package:swipe_app/presentation/invoice/screens/create_invoice.dart';
+import 'package:swipe_app/presentation/invoice/screens/create_invoice_screen.dart';
 
 import '../../models/SwipeCustomerModel.dart';
 import '../../utils/secrets.dart';
 import '../../utils/swipe_services.dart'; // <-- Your next screen
 
 class SelectCustomerScreen extends StatefulWidget {
-  const SelectCustomerScreen({super.key});
+  const SelectCustomerScreen({super.key, required this.origin});
+  final String origin;
 
   @override
   State<SelectCustomerScreen> createState() => _SelectCustomerScreenState();
@@ -35,9 +38,7 @@ class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
     // log(data.toString(), name: "Data =>");
 
     List customersJson = data['customers'];
-    allCustomers = customersJson
-        .map((json) => SwipeCustomerModel.fromJson(json))
-        .toList();
+    allCustomers = customersJson.map((json) => SwipeCustomerModel.fromJson(json)).toList();
 
     setState(() {
       filteredCustomers = allCustomers;
@@ -66,42 +67,43 @@ class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: TextField(
-              controller: searchController,
-              decoration: const InputDecoration(
-                labelText: "Search",
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-              onChanged: filterSearch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: TextField(
+                    controller: searchController,
+                    decoration: const InputDecoration(
+                      labelText: "Search",
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: filterSearch,
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: filteredCustomers.length,
+                    itemBuilder: (context, index) {
+                      final customer = filteredCustomers[index];
+                      return ListTile(
+                        title: Text(customer.name ?? 'No Name'),
+                        subtitle: Text(customer.customerId ?? "Unknown"),
+                        onTap: () {
+                          log(customer.toString(), name: "Selected Customer>");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  (widget.origin == "subscription") ? CreateSubscriptionScreen(customer: customer) : CreateInvoiceScreen(customer: customer),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: filteredCustomers.length,
-              itemBuilder: (context, index) {
-                final customer = filteredCustomers[index];
-                return ListTile(
-                  title: Text(customer.name ?? 'No Name'),
-                  subtitle: Text(customer.customerId ?? "Unknown"),
-                  onTap: () {
-                    log(customer.toString(), name: "Selected Customer>");
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CreateSubscriptionScreen(customer: customer),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

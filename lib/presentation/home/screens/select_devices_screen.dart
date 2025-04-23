@@ -61,19 +61,8 @@ class _SelectDevicesScreenState extends State<SelectDevicesScreen> {
             if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
               List<dynamic> data = jsonDecode(snapshot.data!.body)["data"];
 
-              List<Map<String, dynamic>> filteredDevices = data
-                  .where((order) {
-                    final timestamp = order["installationTimestamp"];
-                    if (timestamp == null) return false;
-
-                    final installedDate = DateTime.parse(timestamp).toLocal();
-                    return widget.startDate.isAfter(installedDate);
-                  })
-                  .cast<Map<String, dynamic>>()
-                  .toList();
-
               if (selectedDevices.isEmpty) {
-                for (var order in filteredDevices) {
+                for (var order in data) {
                   final deviceId = order["deviceid"].toString();
                   final price = order["monthlyPayment_amount"] ?? 0;
                   final tonnage = order["model"] ?? "S10";
@@ -92,9 +81,9 @@ class _SelectDevicesScreenState extends State<SelectDevicesScreen> {
                 children: [
                   Expanded(
                     child: ListView.builder(
-                      itemCount: filteredDevices.length,
+                      itemCount: data.length,
                       itemBuilder: (context, index) {
-                        final order = filteredDevices[index];
+                        final order = data[index];
                         final deviceId = order["deviceid"].toString();
                         final price = order["monthlyPayment_amount"] ?? 0;
                         final tonnage = order["model"] ?? "Unknown";
@@ -187,7 +176,12 @@ class _SelectDevicesScreenState extends State<SelectDevicesScreen> {
                           headers: headers,
                         );
                         Fluttertoast.showToast(msg: "POST response (${secondResponse.statusCode}): ${secondResponse.body}");
-                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const SelectCustomerScreen()));
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const SelectCustomerScreen(
+                                      origin: "subscription",
+                                    )));
                       }
                     },
                     child: const Row(
