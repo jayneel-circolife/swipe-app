@@ -161,7 +161,7 @@ class _SelectDevicesScreenState extends State<SelectDevicesScreen> {
                           "customer_phone": widget.customerModel.phone,
                           "customer_email": widget.customerModel.email,
                           "customer_name": widget.customerModel.name,
-                          "subscription_price": int.parse(widget.firstAmount.toString()),
+                          "subscription_price": int.parse(widget.secondAmount.toString()),
                           "subscription_start_date": widget.secondStartDate?.toIso8601String(),
                           "subscription_end_date": widget.secondEndDate?.toIso8601String(),
                           "plan_year": widget.year == "3+2 Year" ? 3.2 : 5,

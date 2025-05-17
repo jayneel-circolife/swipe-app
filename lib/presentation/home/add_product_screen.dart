@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:swipe_app/presentation/home/screens/select_devices_screen.dart';
 import 'package:swipe_app/utils/gsheet_helper.dart';
 import '../../models/SwipeCustomerModel.dart';
-import 'package:lottie/lottie.dart';
 import '../../utils/secrets.dart';
 import 'package:http/http.dart' as http;
 
@@ -297,8 +296,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
       Fluttertoast.showToast(msg: "Subscription Created Successfully!", webPosition: "center");
     }
 
-    DateTime startDate = subscriptionEndDate;
-    startDate = startDate.add(const Duration(days: 1));
+    DateTime startDate = DateTime(subscriptionEndDate.year, subscriptionEndDate.month, subscriptionEndDate.day +1);
     DateTime endDate = DateTime(startDate.year + 2, startDate.month, startDate.day);
 
     if (plan != "5 Year") {
@@ -413,7 +411,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
                           endDate = DateTime(
                             startDate.year + (selectedSegment == '3+2 Year' ? 3 : 5),
                             startDate.month,
-                            startDate.day - 1,
+                            (selectedSegment == '3+2 Year') ? startDate.day - 1 : startDate.day,
                           );
                         });
                       },
@@ -444,7 +442,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
                                 endDate = DateTime(
                                   startDate.year + (selectedSegment == '3+2 Year' ? 3 : 5),
                                   startDate.month,
-                                  startDate.day,
+                                    (selectedSegment == '3+2 Year') ? startDate.day - 1 : startDate.day,
                                 );
                               });
                             },
